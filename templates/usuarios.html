@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Usuários</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<div class="layout">
+
+    <!-- 🔹 MENU LATERAL -->
+    <div class="sidebar">
+        <h2>Meu Sistema</h2>
+        <a href="/">Cadastro</a>
+        <a href="/usuarios">Usuários</a>
+    </div>
+
+    <!-- 🔹 CONTEÚDO -->
+    <div class="conteudo">
+
+        <h2>Usuários cadastrados</h2>
+
+        <!-- ✅ MENSAGEM -->
+        {% with mensagens = get_flashed_messages(with_categories=true) %}
+          {% if mensagens %}
+            {% set categoria, msg = mensagens[0] %}
+            <div class="alerta {{ categoria }}" id="mensagem">
+              {{ msg }}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <!-- ✅ LISTA -->
+        {% for u in usuarios %}
+            <div class="usuario">
+                <strong>{{ u.nome }}</strong><br>
+                {{ u.email }}<br>
+                Idade: {{ u.idade }}<br><br>
+
+                <a href="/editar/{{ loop.index0 }}">Editar</a>
+                <a href="/deletar/{{ loop.index0 }}"
+                   onclick="return confirm('Tem certeza que deseja deletar?')">
+                   Deletar
+                </a>
+            </div>
+            <hr>
+        {% endfor %}
+
+    </div>
+
+</div>
+
+<!-- ✅ SUMIR MENSAGEM -->
+<script>
+  setTimeout(() => {
+    const msg = document.getElementById("mensagem")
+    if (msg) {
+      msg.style.opacity = "0"
+      setTimeout(() => msg.remove(), 500)
+    }
+  }, 3000)
+</script>
+
+</body>
+</html>

@@ -1,0 +1,71 @@
+.login-box {
+    width: 350px;
+    margin: 100px auto;
+    padding: 3opx;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+}
+
+.layout {
+    display: flex;
+}
+
+.sidebar {
+    width: 200px;
+    background: #1e293b;
+    color: white;
+    height: 100vh;
+    padding: 20px;
+}
+
+.sidebar a {
+    display: block;
+    color: white;
+    margin: 10px 0;
+    text-decoration: none;
+}
+
+.conteudo {
+    flex: 1;
+    padding: 20px;
+}
+
+input, button {
+    display: block;
+    margin: 10px 0;
+    padding: 8px;
+}
+
+/* ALERTAS */
+
+.alerta {
+    padding: 10px;
+    margin-bottom: 15px;
+    color: white;
+    border-radius: 5px;
+    transition: opacity 0.5s ease;
+}
+
+.alerta.cadastro {
+    background: #22c55e;
+}
+
+.alerta.editar {
+    background: #3b82f6;
+}
+
+.alerta.deletar {
+    background: #ef4444;
+}
+
+.alerta.erro {
+    background: #f59e0b;
+}
+
+

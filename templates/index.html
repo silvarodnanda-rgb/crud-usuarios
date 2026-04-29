@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block conteudo %}
+
+<h1>Cadastro de Usuários</h1>
+
+<form method="POST" action="/cadastrar">
+    <input type="text" name="nome" placeholder="Nome" required>
+    <input type="email" name="email" placeholder="Email" required>
+    <input type="number" name="idade" placeholder="Idade" required>
+    <button type="submit">Cadastrar</button>
+</form>
+
+{% with mensagens = get_flashed_messages(with_categories=true) %}
+  {% for categoria, msg in mensagens %}
+    {% if categoria == "cadastro" or categoria == "erro" %}
+      <div class="alerta {{ categoria }}">{{ msg }}</div>
+    {% endif %}
+  {% endfor %}
+{% endwith %}
+
+{% endblock %}

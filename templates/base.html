@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Meu Sistema</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<div class="layout">
+
+    <div class="sidebar">
+        <h2>Meu Sistema</h2>
+        <a href="/">Cadastro</a>
+        <a href="/usuarios">Usuários</a>
+    </div>
+
+    <div class="conteudo">
+
+        {% with mensagens = get_flashed_messages(with_categories=true) %}
+          {% for categoria, msg in mensagens %}
+            <div class="alerta" {{ categoria }}>{{ msg }}</div>
+          {% endfor %}
+        {% endwith %}    
+
+        {% block conteudo %}{% endblock %}
+    </div>
+
+</div>
+
+</body>
+</html>
