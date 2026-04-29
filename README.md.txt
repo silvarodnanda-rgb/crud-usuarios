@@ -13,6 +13,7 @@ Projeto desenvolvido em Python com o objetivo de praticar lógica de programaç�
 - Python
 - JSON
 - HTML
+- CSS
 
 ## Como executar
 1. Clone o repositório
@@ -20,3 +21,6 @@ Projeto desenvolvido em Python com o objetivo de praticar lógica de programaç�
 
 ```bash
 python main.py
+
+## Próximo passo
+- Criar Autenticação (login)
