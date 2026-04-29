@@ -10,19 +10,17 @@
 
 <div class="layout">
 
-    <!-- 🔹 MENU LATERAL -->
+
     <div class="sidebar">
         <h2>Meu Sistema</h2>
         <a href="/">Cadastro</a>
         <a href="/usuarios">Usuários</a>
     </div>
 
-    <!-- 🔹 CONTEÚDO -->
     <div class="conteudo">
 
         <h2>Usuários cadastrados</h2>
 
-        <!-- ✅ MENSAGEM -->
         {% with mensagens = get_flashed_messages(with_categories=true) %}
           {% if mensagens %}
             {% set categoria, msg = mensagens[0] %}
@@ -32,15 +30,14 @@
           {% endif %}
         {% endwith %}
 
-        <!-- ✅ LISTA -->
         {% for u in usuarios %}
             <div class="usuario">
                 <strong>{{ u.nome }}</strong><br>
                 {{ u.email }}<br>
                 Idade: {{ u.idade }}<br><br>
 
-                <a href="/editar/{{ loop.index0 }}">Editar</a>
-                <a href="/deletar/{{ loop.index0 }}"
+                <a href="/editar/{{ u.id }}">Editar</a>
+                <a href="/deletar/{{ u.id }}"
                    onclick="return confirm('Tem certeza que deseja deletar?')">
                    Deletar
                 </a>
@@ -52,7 +49,6 @@
 
 </div>
 
-<!-- ✅ SUMIR MENSAGEM -->
 <script>
   setTimeout(() => {
     const msg = document.getElementById("mensagem")

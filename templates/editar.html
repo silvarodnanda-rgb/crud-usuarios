@@ -4,7 +4,7 @@
 
 <h1>Editar Usuário</h1>
 
-<form method="POST" action="/atualizar/{{ indice }}">
+<form method="POST" action="/atualizar/{{ usuario.id }}">
     <input type="text" name="nome" value="{{ usuario.nome }}">
     <input type="email" name="email" value="{{ usuario.email }}">
     <input type="number" name="idade" value="{{ usuario.idade }}">

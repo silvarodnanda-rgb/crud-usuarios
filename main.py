@@ -1,8 +1,33 @@
 import json
 from flask import Flask, render_template, request, redirect, flash, session
+from flask_sqlalchemy import SQLAlchemy 
+from werkzeug.security import generate_password_hash, check_password_hash
+
 
 app = Flask(__name__)
 app.secret_key = "123456"
+
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///usuarios.db"
+db = SQLAlchemy(app)
+
+class Administrador(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    usuario = db.Column(db.String(50), unique=True, nullable=False)
+    senha = db.Column(db.String(200), nullable=False)
+
+class Usuario(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    nome = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(100), nullable=False)
+    idade = db.Column(db.Integer, nullable=False)    
+
+with app.app_context():
+    db.create_all()
+    if not Administrador.query.filter_by(usuario="admin"). first():
+        senha_hash = generate_password_hash("1234")
+        admin = Administrador(usuario="admin", senha=senha_hash)
+        db.session.add(admin)
+        db.session.commit()    
 
 usuarios = []
 
@@ -119,27 +144,22 @@ def login():
         usuario = request.form["usuario"]
         senha = request.form["senha"]
 
-        if usuario == "admin" and senha == "1234":
-            session["logado"] = True
+        admin = Administrador.query.filter_by(usuario=usuario).first()
 
+        if admin and check_password_hash(admin.senha, senha):
+            session["logado"] = True
             return redirect("/")
+    
         flash("Usuário ou senha inválidos", "erro")
         return redirect("/login")
     
     return render_template("login.html")
-        
-    flash("Usuário ou senha inválidos", "erro")
-    return redirect("/login")
-
-    return render_template("login.html")
-
-
 
 @app.route("/")
 def home():
     if not session.get("logado"):
         return redirect("/login")
-
+    
     return render_template("index.html")
 
 @app.route("/usuarios")
@@ -147,13 +167,11 @@ def usuarios_page():
     if not session.get("logado"):
         return redirect ("/login")
     
-    carregar()
+    usuarios = Usuario.query.all()
     return render_template("usuarios.html", usuarios=usuarios)
 
 @app.route("/cadastrar", methods=["POST"])
 def cadastrar_web():
-    carregar()
-
     nome = request.form["nome"]
     email = request.form["email"]
     idade = request.form["idade"]
@@ -169,47 +187,38 @@ def cadastrar_web():
         erro = "Idade deve ser número" 
     
     if erro:
-        return render_template("index.html", usuarios=usuarios, erro=erro)
-
-    usuarios.append({
-        "nome": nome,
-        "email": email,
-        "idade": idade
-    })
-
-    salvar()
+        return render_template("index.html", erro=erro)
+    
+    novo_usuario = Usuario(nome=nome, email=email,idade=int(idade))
+    db.session.add(novo_usuario)
+    db.session.commit()
 
     flash("Usuário cadastrado com sucesso!", "cadastro")
     return redirect("/")
 
-@app.route("/editar/<int:indice>")
-def editar_usuario(indice):
-    carregar()
-    usuario = usuarios[indice]
-    return render_template("editar.html", usuario=usuario, indice=indice)
+@app.route("/editar/<int:id>")
+def editar_usuario(id):
+    usuario = Usuario.query.get_or_404(id)
+    return render_template("editar.html", usuario=usuario)
 
-@app.route("/atualizar/<int:indice>", methods=["POST"])
-def atualizar_usuarios(indice):
-    carregar()
+@app.route("/atualizar/<int:id>", methods=["POST"])
+def atualizar_usuarios(id):
+    usuario = Usuario.query.get_or_404(id)
 
-    usuarios[indice] = {
-        "nome": request.form["nome"],
-        "email": request.form["email"],
-        "idade": request.form["idade"]
-    }
+    usuario.nome = request.form["nome"]
+    usuario.email = request.form["email"]
+    usuario.idade = int(request.form["idade"])
 
-    salvar()
+    db.session.commit()
 
     flash("Usuário atualizado com sucesso!", "editar")
     return redirect("/usuarios")
 
-@app.route("/deletar/<int:indice>")
-def deletar_web(indice):
-    carregar()
-
-    if indice < len(usuarios):
-        usuarios.pop(indice)
-        salvar()
+@app.route("/deletar/<int:id>")
+def deletar_web(id):
+    usuario = Usuario.query.get_or_404(id)
+    db.session.delete(usuario)
+    db.session.commit()
 
     flash("Usuário deletado com sucesso!", "deletar")
     return redirect("/usuarios")    
