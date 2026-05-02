@@ -1,6 +1,7 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
 <head>
+    <meta charset="UTF-8">
     <title>Meu Sistema</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
@@ -12,15 +13,16 @@
         <h2>Meu Sistema</h2>
         <a href="/">Cadastro</a>
         <a href="/usuarios">Usuários</a>
+        <a href="/logout" class="sair">Sair</a>
     </div>
 
     <div class="conteudo">
 
         {% with mensagens = get_flashed_messages(with_categories=true) %}
           {% for categoria, msg in mensagens %}
-            <div class="alerta" {{ categoria }}>{{ msg }}</div>
+            <div class="alerta {{ categoria }}">{{ msg }}</div>
           {% endfor %}
-        {% endwith %}    
+        {% endwith %}
 
         {% block conteudo %}{% endblock %}
     </div>

@@ -2,19 +2,18 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Usuários</title>
-
+    <title>Meu Sistema | Usuários</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
 
 <div class="layout">
 
-
     <div class="sidebar">
         <h2>Meu Sistema</h2>
         <a href="/">Cadastro</a>
         <a href="/usuarios">Usuários</a>
+        <a href="/logout" class="sair">Sair</a>
     </div>
 
     <div class="conteudo">
@@ -30,20 +29,25 @@
           {% endif %}
         {% endwith %}
 
-        {% for u in usuarios %}
-            <div class="usuario">
-                <strong>{{ u.nome }}</strong><br>
-                {{ u.email }}<br>
-                Idade: {{ u.idade }}<br><br>
-
-                <a href="/editar/{{ u.id }}">Editar</a>
-                <a href="/deletar/{{ u.id }}"
-                   onclick="return confirm('Tem certeza que deseja deletar?')">
-                   Deletar
-                </a>
-            </div>
-            <hr>
-        {% endfor %}
+        {% if usuarios %}
+            {% for u in usuarios %}
+                <div class="usuario">
+                    <div class="usuario-info">
+                        <strong>{{ u.nome }}</strong>
+                        <span>{{ u.email }} · {{ u.idade }} anos</span>
+                    </div>
+                    <div class="usuario-acoes">
+                        <a href="/editar/{{ u.id }}" class="btn-editar">Editar</a>
+                        <a href="/deletar/{{ u.id }}" class="btn-deletar"
+                           onclick="return confirm('Tem certeza que deseja deletar?')">
+                           Deletar
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p style="color: var(--muted); margin-top: 20px;">Nenhum usuário cadastrado ainda.</p>
+        {% endif %}
 
     </div>
 
