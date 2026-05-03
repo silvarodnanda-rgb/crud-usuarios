@@ -142,19 +142,44 @@ carregar()
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
+        
+        # Verifica bloqueio
+        bloqueado_ate = session.get("bloqueado_ate")
+        if bloqueado_ate:
+            import time
+            if time.time() < bloqueado_ate:
+                segundos = int(bloqueado_ate - time.time())
+                flash(f"Conta bloqueada! Tente novamente em {segundos} segundo(s).", "erro")
+                return redirect("/login")
+            else:
+                session.pop("bloqueado_ate", None)
+                session.pop("tentativas", None)
+
         usuario = request.form["usuario"]
         senha = request.form["senha"]
-
         admin = Administrador.query.filter_by(usuario=usuario).first()
 
         if admin and check_password_hash(admin.senha, senha):
             session["logado"] = True
             session["role"] = admin.role
+            session.pop("tentativas", None)
             return redirect("/")
-    
-        flash("Usuário ou senha inválidos", "erro")
+
+        # Conta tentativas
+        tentativas = session.get("tentativas", 0) + 1
+        session["tentativas"] = tentativas
+        restam = 5 - tentativas
+
+        if tentativas >= 5:
+            import time
+            session["bloqueado_ate"] = time.time() + 10
+            flash("Conta bloqueada por 10 segundos!", "erro")
+        else:
+            unidade = "tentativa" if restam == 1 else "tentativas"
+            flash(f"Usuário ou senha inválidos. Restam {restam} {unidade}.", "erro")
+
         return redirect("/login")
-    
+
     return render_template("login.html")
 
 @app.route("/")
