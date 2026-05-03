@@ -37,11 +37,13 @@
                         <span>{{ u.email }} · {{ u.idade }} anos</span>
                     </div>
                     <div class="usuario-acoes">
+                      {% if session.get("role") == "admin" %}
                         <a href="/editar/{{ u.id }}" class="btn-editar">Editar</a>
                         <a href="/deletar/{{ u.id }}" class="btn-deletar"
                            onclick="return confirm('Tem certeza que deseja deletar?')">
                            Deletar
                         </a>
+                      {% endif %}  
                     </div>
                 </div>
             {% endfor %}

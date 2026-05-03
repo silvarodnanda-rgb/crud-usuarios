@@ -4,19 +4,23 @@
 
 <h1>Cadastro de Usuários</h1>
 
-<form method="POST" action="/cadastrar">
-    <input type="text" name="nome" placeholder="Nome" required>
-    <input type="email" name="email" placeholder="Email" required>
-    <input type="number" name="idade" placeholder="Idade" required>
-    <button type="submit">Cadastrar</button>
-</form>
+{% if erro %}
+  <div class="alerta erro" style="margin-bottom: 16px;">{{ erro }}</div>
+{% endif %}
 
-{% with mensagens = get_flashed_messages(with_categories=true) %}
-  {% for categoria, msg in mensagens %}
-    {% if categoria == "cadastro" or categoria == "erro" %}
-      <div class="alerta {{ categoria }}">{{ msg }}</div>
-    {% endif %}
-  {% endfor %}
-{% endwith %}
+<div class="form-card">
+    <form method="POST" action="/cadastrar">
+        <label>Nome</label>
+        <input type="text" name="nome" placeholder="Digite o nome" required>
+
+        <label>Email</label>
+        <input type="email" name="email" placeholder="Digite o email" required>
+
+        <label>Idade</label>
+        <input type="number" name="idade" placeholder="Digite a idade" required>
+
+        <button type="submit">Cadastrar</button>
+    </form>
+</div>
 
 {% endblock %}

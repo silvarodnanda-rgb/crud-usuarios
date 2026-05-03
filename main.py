@@ -14,6 +14,7 @@ class Administrador(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     usuario = db.Column(db.String(50), unique=True, nullable=False)
     senha = db.Column(db.String(200), nullable=False)
+    role = db.Column(db.String(20), nullable=False, default="visualizador")
 
 class Usuario(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -25,7 +26,7 @@ with app.app_context():
     db.create_all()
     if not Administrador.query.filter_by(usuario="admin"). first():
         senha_hash = generate_password_hash("1234")
-        admin = Administrador(usuario="admin", senha=senha_hash)
+        admin = Administrador(usuario="admin", senha=senha_hash, role="admin")
         db.session.add(admin)
         db.session.commit()    
 
@@ -148,6 +149,7 @@ def login():
 
         if admin and check_password_hash(admin.senha, senha):
             session["logado"] = True
+            session["role"] = admin.role
             return redirect("/")
     
         flash("Usuário ou senha inválidos", "erro")
@@ -189,6 +191,10 @@ def cadastrar_web():
     if erro:
         return render_template("index.html", erro=erro)
     
+    if Usuario.query.filter_by(email=email). first():
+        erro = "Email ja cadastrado!"
+        return render_template("index.html", erro=erro)
+    
     novo_usuario = Usuario(nome=nome, email=email,idade=int(idade))
     db.session.add(novo_usuario)
     db.session.commit()
@@ -203,6 +209,10 @@ def editar_usuario(id):
 
 @app.route("/atualizar/<int:id>", methods=["POST"])
 def atualizar_usuarios(id):
+    if session.get("role") != "admin":
+        flash("Acesso negado!", "erro")
+        return redirect("/usuarios")
+    
     usuario = Usuario.query.get_or_404(id)
 
     usuario.nome = request.form["nome"]
@@ -216,6 +226,10 @@ def atualizar_usuarios(id):
 
 @app.route("/deletar/<int:id>")
 def deletar_web(id):
+    if session.get("role") != "admin":
+        flash("Acesso negado!", "erro")
+        return redirect("/usuarios")
+    
     usuario = Usuario.query.get_or_404(id)
     db.session.delete(usuario)
     db.session.commit()
