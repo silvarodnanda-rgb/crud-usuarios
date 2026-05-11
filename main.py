@@ -1,12 +1,14 @@
-import json
+import os
+import time
+from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect, flash, session
-from flask_sqlalchemy import SQLAlchemy 
+from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 
+load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = "123456"
-
+app.secret_key = os.getenv("SECRET_KEY")
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///usuarios.db"
 db = SQLAlchemy(app)
 
@@ -15,138 +17,54 @@ class Administrador(db.Model):
     usuario = db.Column(db.String(50), unique=True, nullable=False)
     senha = db.Column(db.String(200), nullable=False)
     role = db.Column(db.String(20), nullable=False, default="visualizador")
+    protegido = db.Column(db.Boolean, default=False)
 
 class Usuario(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(100), nullable=False)
-    idade = db.Column(db.Integer, nullable=False)    
+    idade = db.Column(db.Integer, nullable=False)
+    linkedin = db.Column(db.String(200), nullable=True)
+    github = db.Column(db.String(200), nullable=True)
+    protegido = db.Column(db.Boolean, default=False)
 
 with app.app_context():
     db.create_all()
-    if not Administrador.query.filter_by(usuario="admin"). first():
+
+    # Admin demo para testes
+    if not Administrador.query.filter_by(usuario="admin").first():
         senha_hash = generate_password_hash("1234")
         admin = Administrador(usuario="admin", senha=senha_hash, role="admin")
         db.session.add(admin)
-        db.session.commit()    
+        db.session.commit()
 
-usuarios = []
+    # Login pessoal
+    if not Administrador.query.filter_by(usuario="fernanda").first():
+        senha_hash = generate_password_hash(os.getenv("SENHA_FERNANDA"))
+        eu = Administrador(usuario="fernanda", senha=senha_hash, role="admin", protegido=True)
+        db.session.add(eu)
+        db.session.commit()
 
-import os 
-
-def salvar():
-    caminho= os.path.abspath("usuarios.json")
-    print("Salvando em:", caminho)
-
-    with open("usuarios.json", "w") as arquivo:
-        json.dump(usuarios, arquivo)   
-
-def carregar():
-    global usuarios
-    try:
-        with open("usuarios.json", "r") as arquivo:
-            usuarios = json.load(arquivo)
-    except:
-        usuarios = []            
-
-def cadastrar():
-    nome = input("Digite o Nome: ")
-    email = input("Digite o email: ")
-    idade = input("Digite a idade: ")
-
-    usuario = {
-        "nome": nome,
-        "email": email,
-        "idade": idade
-
-    }
-
-    usuarios.append(usuario)
-    salvar()
-    print("Usuário cadastrado com sucesso! \n")
-
-
-def listar():
-    if len(usuarios) == 0:
-        print("Nenhum usuário cadastrado. \n")
-    else:
-        print("\n Lista de usuários: ")
-        for i, usuario in enumerate(usuarios):
-            print(f"{i} - {usuario['nome']} | {usuario['email']} | {usuario['idade']}")
-        print()
-
-def editar():
-    listar()
-    if len(usuarios) == 0:
-        return
-
-    indice = int(input("Digite o número do usuário que deseja editar: ")) 
-    if indice < len(usuarios):
-        nome =  input("Novo nome: ")
-        email = input("Novo email: ")
-        idade = input("Nova idade: ")
-
-        usuarios[indice] = {
-            "nome": nome,
-            "email": email,
-            "idade": idade
-
-        }
-
-        salvar()
-
-        print("Usuário atualizado com sucesso! ")
-    else:
-        print("Índice inválido! \n ")    
-
-def deletar():
-    listar()
-    if len(usuarios) == 0:
-        return
-    indice = int(input("Digite o número do usuário que deseja deletar: "))
-    if indice < len(usuarios):
-        usuarios.pop(indice)
-        salvar()
-        print("Usuário removido com sucesso! \n ")
-    else:
-        print("Índice inválido! \n ")    
-
-def menu():
-    while True:
-        print("=== MENU ===")
-        print("1 - Cadastrar usuário")
-        print("2 - Listar usuário")
-        print("3 - Editar usuário")
-        print("4 - Deletar usuário")
-        print("5 - Sair")
-
-        opcao = input("Escolha uma opção:")
-
-        if opcao == "1":
-            cadastrar()
-        elif opcao == "2":
-            listar()
-        elif opcao == "3":
-            editar()
-        elif opcao == "4":
-            deletar()
-        elif opcao == "5":
-            print("Encerrando sistema...")
-            break       
-        else:
-            print("Opção inválida! \n")
-
-carregar()
-# menu()                
+    # Dados pessoais protegidos na lista
+    if not Usuario.query.filter_by(email=os.getenv("MEU_EMAIL")).first():
+        eu_usuario = Usuario(
+            nome="Fernanda Rodrigues",
+            email=os.getenv("MEU_EMAIL"),
+            idade=22,
+            linkedin="https://www.linkedin.com/in/nanda-rodrigu3s/",
+            github="https://github.com/silvarodnanda-rgb",
+            protegido=True
+        )
+        db.session.add(eu_usuario)
+        db.session.commit()
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        
+
         # Verifica bloqueio
         bloqueado_ate = session.get("bloqueado_ate")
         if bloqueado_ate:
-            import time
             if time.time() < bloqueado_ate:
                 segundos = int(bloqueado_ate - time.time())
                 flash(f"Conta bloqueada! Tente novamente em {segundos} segundo(s).", "erro")
@@ -171,7 +89,6 @@ def login():
         restam = 5 - tentativas
 
         if tentativas >= 5:
-            import time
             session["bloqueado_ate"] = time.time() + 10
             flash("Conta bloqueada por 10 segundos!", "erro")
         else:
@@ -182,20 +99,50 @@ def login():
 
     return render_template("login.html")
 
+
+@app.route("/registro", methods=["GET", "POST"])
+def registro():
+    if request.method == "POST":
+        usuario = request.form["usuario"]
+        senha = request.form["senha"]
+
+        if len(usuario) < 3:
+            flash("Usuário deve ter no mínimo 3 caracteres!", "erro")
+            return redirect("/registro")
+
+        if len(senha) < 4:
+            flash("Senha deve ter no mínimo 4 caracteres!", "erro")
+            return redirect("/registro")
+
+        if Administrador.query.filter_by(usuario=usuario).first():
+            flash("Usuário já existe!", "erro")
+            return redirect("/registro")
+
+        senha_hash = generate_password_hash(senha)
+        novo = Administrador(usuario=usuario, senha=senha_hash, role="visualizador")
+        db.session.add(novo)
+        db.session.commit()
+
+        flash("Conta criada com sucesso! Faça login.", "cadastro")
+        return redirect("/login")
+
+    return render_template("registro.html")
+
+
 @app.route("/")
 def home():
     if not session.get("logado"):
         return redirect("/login")
-    
     return render_template("index.html")
+
 
 @app.route("/usuarios")
 def usuarios_page():
     if not session.get("logado"):
-        return redirect ("/login")
-    
+        return redirect("/login")
     usuarios = Usuario.query.all()
     return render_template("usuarios.html", usuarios=usuarios)
+
 
 @app.route("/cadastrar", methods=["POST"])
 def cadastrar_web():
@@ -205,68 +152,78 @@ def cadastrar_web():
 
     erro = None
 
-    #validações
     if not nome or len(nome) < 3:
         erro = "Nome inválido (mínimo 3 letras)"
-    if "@" not in email or "." not in email:
+    elif "@" not in email or "." not in email:
         erro = "Email inválido"
-    if not idade.isdigit():
-        erro = "Idade deve ser número" 
-    
+    elif not idade.isdigit():
+        erro = "Idade deve ser número"
+    elif Usuario.query.filter_by(email=email).first():
+        erro = "Email já cadastrado!"
+
     if erro:
         return render_template("index.html", erro=erro)
-    
-    if Usuario.query.filter_by(email=email). first():
-        erro = "Email ja cadastrado!"
-        return render_template("index.html", erro=erro)
-    
-    novo_usuario = Usuario(nome=nome, email=email,idade=int(idade))
+
+    novo_usuario = Usuario(nome=nome, email=email, idade=int(idade))
     db.session.add(novo_usuario)
     db.session.commit()
 
     flash("Usuário cadastrado com sucesso!", "cadastro")
     return redirect("/")
 
+
 @app.route("/editar/<int:id>")
 def editar_usuario(id):
     usuario = Usuario.query.get_or_404(id)
     return render_template("editar.html", usuario=usuario)
+
 
 @app.route("/atualizar/<int:id>", methods=["POST"])
 def atualizar_usuarios(id):
     if session.get("role") != "admin":
         flash("Acesso negado!", "erro")
         return redirect("/usuarios")
-    
+
     usuario = Usuario.query.get_or_404(id)
+
+    if usuario.protegido:
+        flash("Este usuário não pode ser editado!", "erro")
+        return redirect("/usuarios")
 
     usuario.nome = request.form["nome"]
     usuario.email = request.form["email"]
     usuario.idade = int(request.form["idade"])
-
     db.session.commit()
 
     flash("Usuário atualizado com sucesso!", "editar")
     return redirect("/usuarios")
+
 
 @app.route("/deletar/<int:id>")
 def deletar_web(id):
     if session.get("role") != "admin":
         flash("Acesso negado!", "erro")
         return redirect("/usuarios")
-    
+
     usuario = Usuario.query.get_or_404(id)
+
+    if usuario.protegido:
+        flash("Este usuário não pode ser deletado!", "erro")
+        return redirect("/usuarios")
+
     db.session.delete(usuario)
     db.session.commit()
 
     flash("Usuário deletado com sucesso!", "deletar")
-    return redirect("/usuarios")    
+    return redirect("/usuarios")
+
 
 @app.route("/logout")
 def logout():
-    session.pop("logado", None)
+    session.clear()
     flash("Logout realizado com sucesso!", "editar")
     return redirect("/login")
 
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, use_reloader=False)

@@ -15,6 +15,8 @@
         <button type="submit">Entrar</button>
     </form>
 
+    <a href="/registro" style="display: block; text-align: center; margin-top: 16px; color: var(--muted); font-size: 0.85rem;">Não tem conta? Criar conta</a>
+
     {% with mensagens = get_flashed_messages(with_categories=true) %}
       {% for categoria, msg in mensagens %}
         <div class="alerta {{ categoria }}">{{ msg }}</div>

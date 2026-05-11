@@ -35,6 +35,16 @@
                     <div class="usuario-info">
                         <strong>{{ u.nome }}</strong>
                         <span>{{ u.email }} · {{ u.idade }} anos</span>
+                        {% if u.linkedin or u.github %}
+                            <span style="margin-top: 6px; display: flex; gap: 12px;">
+                                {% if u.linkedin %}
+                                    <a href="{{ u.linkedin }}" target="_blank" style="color: var(--purple-light); font-size: 0.82rem;">LinkedIn</a>
+                                {% endif %}
+                                {% if u.github %}
+                                    <a href="{{ u.github }}" target ="_blank" style="color: var(--purple-light); font-size: 0.82rem">GitHub</a>
+                                {% endif %}        
+                            </span>
+                        {% endif %}    
                     </div>
                     <div class="usuario-acoes">
                       {% if session.get("role") == "admin" %}
